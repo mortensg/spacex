@@ -1,65 +1,87 @@
-<div class="filter-container">
-  <h3>
-    Filter by Role
-  </h3>
-  <div class="role">
-    <mat-chip-list cdkDropList>
-      <mat-chip cdkDrag (click)="filter('')">All</mat-chip>
-      <mat-chip cdkDrag *ngFor="let value of filterRolers" (click)="filter(value)"> {{value ?? 'Unknown'}}
-      </mat-chip>
-    </mat-chip-list>
-  </div>
-  <h3>
-    Filter by mass Kg
-  </h3>
-  <div class="mass-kg">
-    <mat-chip-list cdkDropList>
-      <mat-chip cdkDrag *ngFor="let value of filterMassKg" (click)="filter(value)"> {{value ?? 'Unknown'}}
-      </mat-chip>
-    </mat-chip-list>
-  </div>
+<div class="loading" *ngIf="!ships$">
+  <img src="http://static.demilked.com/wp-content/uploads/2016/06/gif-animations-replace-loading-screen-14.gif" alt="">
+  <h1>
+    Wating for Elon Musk to send data
+  </h1>
 </div>
 
-<div class="table-container">
-  <table mat-table [dataSource]="ships" matSort>
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let row"> {{row.name}} </td>
-    </ng-container>
-    <ng-container matColumnDef="type">
-      <th mat-header-cell *matHeaderCellDef> Type </th>
-      <td mat-cell *matCellDef="let row"> {{row.type}}</td>
-    </ng-container>
-    <ng-container matColumnDef="mass_kg">
-      <th mat-header-cell *matHeaderCellDef> Mass kg </th>
-      <td mat-cell *matCellDef="let row"> {{row.mass_kg ?? 'Unknown'}} <span *ngIf="row.mass_kg"> kg</span></td>
-    </ng-container>
-    <ng-container matColumnDef="roles">
-      <th mat-header-cell *matHeaderCellDef> Roles </th>
-      <td mat-cell *matCellDef="let row"> {{row.roles ?? 'Unknown'}}</td>
-    </ng-container>
+<div class="container" *ngIf="ships$ | async">
+  <h1>
+    Ships
+  </h1>
+  <div class="filter">
+    <div class="element">
+      <p>
+        Filter by Role
+      </p>
+      <select class="form-control" (change)="selectedRole($event.target, 'role')">
+          <option value="all">- Display All -</option>
+          <option *ngFor="let category of filterValues.roles" [value]="category">{{ category }}</option>
+      </select>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </div>
+    <div class="element">
+      <p>
+        Filter by mass kg
+      </p>
+      <select *ngIf="massKgValues$ | async" class="form-control" (change)="selectedRole($event.target, 'mass_kg')">
+        <option value="all">- Display All -</option>
+        <option *ngFor="let category of filterValues.mass_kg" [value]="category">{{ category }}</option>
+      </select>
+    </div>
+  </div>
+  <table *ngIf="ships$ | async as ships">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Roles</th>
+        <th>Mass kg</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let ship of ships$ | async">
+        <td>
+          {{ ship.name }}
+        </td>
+        <td>
+          <span *ngFor="let role of ship.roles">
+            {{ role }}
+          </span>
+        </td>
+        <td>
+          {{ ship.mass_kg ?? 'Unknown' }}
+        </td>
+      </tr>
+    </tbody>
   </table>
-</div>
 
-<div class="table-container">
-  <table mat-table [dataSource]="launches" matSort>
-    <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef> Name </th>
-      <td mat-cell *matCellDef="let row"> {{row.name}} </td>
-    </ng-container>
-    <ng-container matColumnDef="capsules">
-      <th mat-header-cell *matHeaderCellDef> capsules </th>
-      <td mat-cell *matCellDef="let row"> {{row.capsules.name}}</td>
-    </ng-container>
-    <ng-container matColumnDef="payloads">
-      <th mat-header-cell *matHeaderCellDef> payloads </th>
-      <td mat-cell *matCellDef="let row"> <span *ngFor="let item of row.payloads"> {{ item.name }}, </span></td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumnsLaunches"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumnsLaunches;"></tr>
+  <h1>
+    Launches
+  </h1>
+  <table *ngIf="launches$ | async as launches">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Capsules</th>
+        <th>Payloads</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let launch of launches">
+        <td>
+          {{ launch.name }}
+        </td>
+        <td>
+          <span *ngFor="let capsule of launch.capsules">
+            {{ capsule.name ?? 'no name'}}
+          </span>
+        </td>
+        <td>
+          <span *ngFor="let payload of launch.payloads">
+            {{ payload.name }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
   </table>
 </div>

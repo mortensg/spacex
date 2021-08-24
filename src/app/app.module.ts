@@ -4,8 +4,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { MatTableModule } from '@angular/material/table';
-import { MatChipsModule } from '@angular/material/chips';
 
 
 @NgModule({
@@ -16,9 +14,7 @@ import { MatChipsModule } from '@angular/material/chips';
     BrowserModule,
     AppRoutingModule,
     HttpClientModule,
-    BrowserAnimationsModule,
-    MatTableModule,
-    MatChipsModule
+    BrowserAnimationsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

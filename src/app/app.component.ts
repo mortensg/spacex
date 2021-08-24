@@ -1,6 +1,7 @@
 import { DataService } from './services/data.service';
 import { AfterViewInit, Component } from '@angular/core';
-import { MatTableDataSource } from '@angular/material/table';
+import { BehaviorSubject, combineLatest } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -9,51 +10,54 @@ import { MatTableDataSource } from '@angular/material/table';
 })
 export class AppComponent implements AfterViewInit {
   title = 'space';
-  ships:any=[];
-  displayedColumns: string[] = ['name', 'type', 'mass_kg', 'roles'];
-  displayedColumnsLaunches: string[] = ['name', 'capsules', 'payloads'];
-  filterRolers: string[] = [];
-  filterMassKg: string[] = [];
-  launches: any = []
+  filterValues: any = {'mass_kg':[], 'roles':[]};
+  launches$ = this.dataservice.getLaunchData$;
+  massKgValues$ = this.dataservice.ships$
+    .pipe(
+      map(ships => ships.map(ship => {
+        if(this.filterValues.mass_kg.indexOf(ship.mass_kg) === -1 && ship.mass_kg != null) {
+          this.filterValues.mass_kg.push(ship.mass_kg);
+        }
+        ship.roles.map(role => {
+          if(this.filterValues.roles.indexOf(role) === -1) {
+            this.filterValues.roles.push(role)
+          }
+        })
+      }))
+    );
 
-  constructor(private dataservice:DataService) {
-  }
+  private filter = new BehaviorSubject<any>({value: 'all', type: 'role'});
+  filterAction$ = this.filter.asObservable();
+
+  ships$ = combineLatest([
+    this.dataservice.ships$,
+    this.filterAction$,
+  ])
+  .pipe(
+    map(([ships, filter]) =>
+      ships.filter(ship => {
+        if(filter.type === 'role') {
+
+          if(filter.value === 'all') return true
+          else return filter.value ? ship.roles.indexOf(filter.value) > -1: true
+
+        } else if(filter.type === 'mass_kg') {
+
+          if(filter.value === 'all') return true
+          else return filter.value ? ship.mass_kg == filter.value: true
+
+        } else return true
+      })
+
+    )
+  )
+
+  constructor(private dataservice:DataService) {}
 
   ngAfterViewInit(): void {
-    this.dataservice.getAllShipsList().subscribe(data => {
-      this.ships = new MatTableDataSource(data);
-      this.addFilter(data);
-    })
-
-
-    this.dataservice.requestLaunchData().subscribe(data => {
-        data[0].forEach(launches => {
-          launches.capsules.forEach(capsule => {
-            let obj = data[1].find(o => o.id === capsule);
-            launches.capsules = {id: capsule, name: obj.serial};
-          });
-
-          launches.payloads.forEach((payload, i) => {
-            let obj = data[2].find(o => o.id === payload);
-            launches.payloads[i] = {id: payload, name: obj.name};
-          });
-        });
-        this.launches = new MatTableDataSource(data[0]);
-    });
-
   }
 
-  addFilter(data) {
-    data.forEach(element => {
-      element.roles.forEach(role => {
-        if(this.filterRolers.indexOf(role) === -1) this.filterRolers.push(role);
-      });
-      if(this.filterMassKg.indexOf(element.mass_kg) === -1) this.filterMassKg.push(element.mass_kg);
-    });
+  selectedRole(value, type) {
+    this.filter.next({value: value.value, type: type})
   }
-
-  filter(value) {
-    this.ships.filter = value.toString();
-  }
-
 }
